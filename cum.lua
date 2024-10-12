@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -24,7 +25,7 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = game:GetService("CoreGui")
 
 local AimbotFrame = Instance.new("Frame")
-AimbotFrame.Size = UDim2.new(0, 250, 0, 200)
+AimbotFrame.Size = UDim2.new(0, 250, 0, 250)  -- Increased height for new button
 AimbotFrame.Position = UDim2.new(0.5, -125, 0, 20)
 AimbotFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 AimbotFrame.BorderSizePixel = 0
@@ -58,7 +59,7 @@ Title.Parent = TitleBar
 
 local KeyInput = Instance.new("TextBox")
 KeyInput.Size = UDim2.new(0.9, 0, 0, 35)
-KeyInput.Position = UDim2.new(0.05, 0, 0.25, 0)
+KeyInput.Position = UDim2.new(0.05, 0, 0.2, 0)
 KeyInput.Text = "E"
 KeyInput.PlaceholderText = "Aimbot Key"
 KeyInput.TextColor3 = Color3.new(1, 1, 1)
@@ -73,7 +74,7 @@ KeyUICorner.Parent = KeyInput
 
 local ColorInput = Instance.new("TextBox")
 ColorInput.Size = UDim2.new(0.9, 0, 0, 35)
-ColorInput.Position = UDim2.new(0.05, 0, 0.45, 0)
+ColorInput.Position = UDim2.new(0.05, 0, 0.35, 0)
 ColorInput.Text = "White"
 ColorInput.PlaceholderText = "FOV Color (e.g. Red, Blue, Green)"
 ColorInput.TextColor3 = Color3.new(1, 1, 1)
@@ -88,7 +89,7 @@ ColorUICorner.Parent = ColorInput
 
 local FOVSlider = Instance.new("Frame")
 FOVSlider.Size = UDim2.new(0.9, 0, 0, 35)
-FOVSlider.Position = UDim2.new(0.05, 0, 0.65, 0)
+FOVSlider.Position = UDim2.new(0.05, 0, 0.5, 0)
 FOVSlider.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 FOVSlider.Parent = AimbotFrame
 
@@ -113,6 +114,21 @@ FOVLabel.TextColor3 = Color3.new(1, 1, 1)
 FOVLabel.Font = Enum.Font.Gotham
 FOVLabel.TextSize = 14
 FOVLabel.Parent = FOVSlider
+
+-- New Fullbright Button
+local FullbrightButton = Instance.new("TextButton")
+FullbrightButton.Size = UDim2.new(0.9, 0, 0, 35)
+FullbrightButton.Position = UDim2.new(0.05, 0, 0.65, 0)
+FullbrightButton.Text = "Toggle Fullbright"
+FullbrightButton.TextColor3 = Color3.new(1, 1, 1)
+FullbrightButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+FullbrightButton.Font = Enum.Font.Gotham
+FullbrightButton.TextSize = 14
+FullbrightButton.Parent = AimbotFrame
+
+local FullbrightUICorner = Instance.new("UICorner")
+FullbrightUICorner.CornerRadius = UDim.new(0, 5)
+FullbrightUICorner.Parent = FullbrightButton
 
 local TargetInfoFrame = Instance.new("Frame")
 TargetInfoFrame.Size = UDim2.new(0, 200, 0, 50)
@@ -268,131 +284,35 @@ Players.PlayerRemoving:Connect(function(player)
     RemovePlayerEsp(player)
 end)
 
--- Radar Functions
-local RadarInfo = {
-    Position = Vector2.new(200, 200),
-    Radius = 100,
-    Scale = 1,
-    RadarBack = Color3.fromRGB(10, 10, 10),
-    RadarBorder = Color3.fromRGB(75, 75, 75),
-    LocalPlayerDot = Color3.fromRGB(255, 255, 255),
-    PlayerDot = Color3.fromRGB(60, 170, 255),
-    Team = Color3.fromRGB(0, 255, 0),
-    Enemy = Color3.fromRGB(255, 0, 0),
-    Health_Color = true,
-    Team_Check = true
-}
+-- Fullbright
+local OriginalBrightness = Lighting.Brightness
+local OriginalClockTime = Lighting.ClockTime
+local OriginalFogEnd = Lighting.FogEnd
+local OriginalGlobalShadows = Lighting.GlobalShadows
+local OriginalOutdoorAmbient = Lighting.OutdoorAmbient
 
-local function NewCircle(Transparency, Color, Radius, Filled, Thickness)
-    local c = Drawing.new("Circle")
-    c.Transparency = Transparency
-    c.Color = Color
-    c.Visible = false
-    c.Thickness = Thickness
-    c.Position = Vector2.new(0, 0)
-    c.Radius = Radius
-    c.NumSides = math.clamp(Radius*55/100, 10, 75)
-    c.Filled = Filled
-    return c
-end
+local FullbrightEnabled = false
 
-local RadarBackground = NewCircle(0.9, RadarInfo.RadarBack, RadarInfo.Radius, true, 1)
-RadarBackground.Visible = true
-RadarBackground.Position = RadarInfo.Position
-
-local RadarBorder = NewCircle(0.75, RadarInfo.RadarBorder, RadarInfo.Radius, false, 3)
-RadarBorder.Visible = true
-RadarBorder.Position = RadarInfo.Position
-
-local function GetRelative(pos)
-    local char = LocalPlayer.Character
-    if char ~= nil and char.PrimaryPart ~= nil then
-        local pmpart = char.PrimaryPart
-        local camerapos = Vector3.new(Camera.CFrame.Position.X, pmpart.Position.Y, Camera.CFrame.Position.Z)
-        local newcf = CFrame.new(pmpart.Position, camerapos)
-        local r = newcf:PointToObjectSpace(pos)
-        return r.X, r.Z
+local function SetFullbright(enable)
+    if enable then
+        Lighting.Brightness = 2
+        Lighting.ClockTime = 14
+        Lighting.FogEnd = 100000
+        Lighting.GlobalShadows = false
+        Lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
     else
-        return 0, 0
+        Lighting.Brightness = OriginalBrightness
+        Lighting.ClockTime = OriginalClockTime
+        Lighting.FogEnd = OriginalFogEnd
+        Lighting.GlobalShadows = OriginalGlobalShadows
+        Lighting.OutdoorAmbient = OriginalOutdoorAmbient
     end
 end
 
-local function PlaceDot(plr)
-    local PlayerDot = NewCircle(1, RadarInfo.PlayerDot, 3, true, 1)
-
-    local function Update()
-        local c 
-        c = RunService.RenderStepped:Connect(function()
-            local char = plr.Character
-            if char and char:FindFirstChildOfClass("Humanoid") and char.PrimaryPart ~= nil and char:FindFirstChildOfClass("Humanoid").Health > 0 then
-                local hum = char:FindFirstChildOfClass("Humanoid")
-                local scale = RadarInfo.Scale
-                local relx, rely = GetRelative(char.PrimaryPart.Position)
-                local newpos = RadarInfo.Position - Vector2.new(relx * scale, rely * scale) 
-                
-                if (newpos - RadarInfo.Position).magnitude < RadarInfo.Radius-2 then 
-                    PlayerDot.Radius = 3   
-                    PlayerDot.Position = newpos
-                    PlayerDot.Visible = true
-                else 
-                    local dist = (RadarInfo.Position - newpos).magnitude
-                    local calc = (RadarInfo.Position - newpos).unit * (dist - RadarInfo.Radius)
-                    local inside = Vector2.new(newpos.X + calc.X, newpos.Y + calc.Y)
-                    PlayerDot.Radius = 2
-                    PlayerDot.Position = inside
-                    PlayerDot.Visible = true
-                end
-
-                PlayerDot.Color = RadarInfo.PlayerDot
-                if RadarInfo.Team_Check then
-                    if plr.TeamColor == LocalPlayer.TeamColor then
-                        PlayerDot.Color = RadarInfo.Team
-                    else
-                        PlayerDot.Color = RadarInfo.Enemy
-                    end
-                end
-
-                if RadarInfo.Health_Color then
-                    PlayerDot.Color = Color3.fromRGB(255 - (255 * (hum.Health / hum.MaxHealth)), 255 * (hum.Health / hum.MaxHealth), 0)
-                end
-            else 
-                PlayerDot.Visible = false
-                if Players:FindFirstChild(plr.Name) == nil then
-                    PlayerDot:Remove()
-                    c:Disconnect()
-                end
-            end
-        end)
-    end
-    coroutine.wrap(Update)()
-end
-
-for _,v in pairs(Players:GetChildren()) do
-    if v.Name ~= LocalPlayer.Name then
-        PlaceDot(v)
-    end
-end
-
-local function NewLocalDot()
-    local d = Drawing.new("Triangle")
-    d.Visible = true
-    d.Thickness = 1
-    d.Filled = true
-    d.Color = RadarInfo.LocalPlayerDot
-    d.PointA = RadarInfo.Position + Vector2.new(0, -6)
-    d.PointB = RadarInfo.Position + Vector2.new(-3, 6)
-    d.PointC = RadarInfo.Position + Vector2.new(3, 6)
-    return d
-end
-
-local LocalPlayerDot = NewLocalDot()
-
-Players.PlayerAdded:Connect(function(v)
-    if v.Name ~= LocalPlayer.Name then
-        PlaceDot(v)
-    end
-    LocalPlayerDot:Remove()
-    LocalPlayerDot = NewLocalDot()
+FullbrightButton.MouseButton1Click:Connect(function()
+    FullbrightEnabled = not FullbrightEnabled
+    SetFullbright(FullbrightEnabled)
+    FullbrightButton.BackgroundColor3 = FullbrightEnabled and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(50, 50, 50)
 end)
 
 RunService.RenderStepped:Connect(function()
@@ -410,20 +330,6 @@ RunService.RenderStepped:Connect(function()
     else
         TargetInfoLabel.Text = "Target: None"
     end
-
-    if LocalPlayerDot ~= nil then
-        LocalPlayerDot.Color = RadarInfo.LocalPlayerDot
-        LocalPlayerDot.PointA = RadarInfo.Position + Vector2.new(0, -6)
-        LocalPlayerDot.PointB = RadarInfo.Position + Vector2.new(-3, 6)
-        LocalPlayerDot.PointC = RadarInfo.Position + Vector2.new(3, 6)
-    end
-    RadarBackground.Position = RadarInfo.Position
-    RadarBackground.Radius = RadarInfo.Radius
-    RadarBackground.Color = RadarInfo.RadarBack
-
-    RadarBorder.Position = RadarInfo.Position
-    RadarBorder.Radius = RadarInfo.Radius
-    RadarBorder.Color = RadarInfo.RadarBorder
 end)
 
 UserInputService.InputBegan:Connect(function(Input)
@@ -510,37 +416,10 @@ end
 
 AddDragging(AimbotFrame, TitleBar)
 
-local inset = game:GetService("GuiService"):GetGuiInset()
-local Mouse = LocalPlayer:GetMouse()
-
-local dragging = false
-local offset = Vector2.new(0, 0)
-UserInputService.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 and (Vector2.new(Mouse.X, Mouse.Y + inset.Y) - RadarInfo.Position).magnitude < RadarInfo.Radius then
-        offset = RadarInfo.Position - Vector2.new(Mouse.X, Mouse.Y)
-        dragging = true
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
-RunService.RenderStepped:Connect(function()
-    if dragging then
-        RadarInfo.Position = Vector2.new(Mouse.X, Mouse.Y) + offset
-    end
-end)
-
 -- Return a function to clean up the script when it's unloaded
 return function()
     ScreenGui:Destroy()
     Circle:Remove()
-    RadarBackground:Remove()
-    RadarBorder:Remove()
-    LocalPlayerDot:Remove()
     for _, connection in pairs(EspConnections) do
         connection:Disconnect()
     end
@@ -549,4 +428,5 @@ return function()
             obj:Destroy()
         end
     end
+    SetFullbright(false)
 end
