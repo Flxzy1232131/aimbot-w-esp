@@ -239,17 +239,7 @@ local function CreatePlayerEsp(player)
     EspConnections[player] = RunService.RenderStepped:Connect(UpdateEsp)
 end
 
-for _, player in ipairs(Players:GetPlayers()) do
-    if player ~= LocalPlayer then
-        CreatePlayerEsp(player)
-    end
-end
-
-Players.PlayerAdded:Connect(function(player)
-    CreatePlayerEsp(player)
-end)
-
-Players.PlayerRemoving:Connect(function(player)
+local function RemovePlayerEsp(player)
     if EspConnections[player] then
         EspConnections[player]:Disconnect()
         EspConnections[player] = nil
@@ -260,6 +250,22 @@ Players.PlayerRemoving:Connect(function(player)
         end
         BoneEsp[player] = nil
     end
+end
+
+for _, player in ipairs(Players:GetPlayers()) do
+    if player ~= LocalPlayer then
+        CreatePlayerEsp(player)
+    end
+end
+
+Players.PlayerAdded:Connect(function(player)
+    if player ~= LocalPlayer then
+        CreatePlayerEsp(player)
+    end
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    RemovePlayerEsp(player)
 end)
 
 -- Radar Functions
