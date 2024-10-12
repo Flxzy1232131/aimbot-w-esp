@@ -1,4 +1,3 @@
--- made by daddy flxzy 👅
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -22,7 +21,7 @@ local IsActive = false
 local AimbotKey = Enum.KeyCode.E
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+ScreenGui.Parent = game:GetService("CoreGui")
 
 local AimbotFrame = Instance.new("Frame")
 AimbotFrame.Size = UDim2.new(0, 250, 0, 200)
@@ -528,3 +527,20 @@ RunService.RenderStepped:Connect(function()
         RadarInfo.Position = Vector2.new(Mouse.X, Mouse.Y) + offset
     end
 end)
+
+-- Return a function to clean up the script when it's unloaded
+return function()
+    ScreenGui:Destroy()
+    Circle:Remove()
+    RadarBackground:Remove()
+    RadarBorder:Remove()
+    LocalPlayerDot:Remove()
+    for _, connection in pairs(EspConnections) do
+        connection:Disconnect()
+    end
+    for _, esp in pairs(BoneEsp) do
+        for _, obj in pairs(esp) do
+            obj:Destroy()
+        end
+    end
+end
