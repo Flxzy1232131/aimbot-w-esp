@@ -26,7 +26,7 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = game:GetService("CoreGui")
 
 local AimbotFrame = Instance.new("Frame")
-AimbotFrame.Size = UDim2.new(0, 250, 0, 250)  -- Increased height for new button
+AimbotFrame.Size = UDim2.new(0, 250, 0, 285)  -- Increased height for new button
 AimbotFrame.Position = UDim2.new(0.5, -125, 0, 20)
 AimbotFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 AimbotFrame.BorderSizePixel = 0
@@ -130,6 +130,25 @@ FullbrightButton.Parent = AimbotFrame
 local FullbrightUICorner = Instance.new("UICorner")
 FullbrightUICorner.CornerRadius = UDim.new(0, 5)
 FullbrightUICorner.Parent = FullbrightButton
+
+-- New Infinite Yield Button
+local InfYieldButton = Instance.new("TextButton")
+InfYieldButton.Size = UDim2.new(0.9, 0, 0, 35)
+InfYieldButton.Position = UDim2.new(0.05, 0, 0.8, 0)
+InfYieldButton.Text = "Run Infinite Yield"
+InfYieldButton.TextColor3 = Color3.new(1, 1, 1)
+InfYieldButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+InfYieldButton.Font = Enum.Font.Gotham
+InfYieldButton.TextSize = 14
+InfYieldButton.Parent = AimbotFrame
+
+local InfYieldUICorner = Instance.new("UICorner")
+InfYieldUICorner.CornerRadius = UDim.new(0, 5)
+InfYieldUICorner.Parent = InfYieldButton
+
+InfYieldButton.MouseButton1Click:Connect(function()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
+end)
 
 local TargetInfoFrame = Instance.new("Frame")
 TargetInfoFrame.Size = UDim2.new(0, 200, 0, 50)
