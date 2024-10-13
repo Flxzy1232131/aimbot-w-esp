@@ -20,6 +20,7 @@ Circle.Visible = true
 
 local IsActive = false
 local AimbotKey = Enum.KeyCode.E
+local CurrentTarget = nil
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Parent = game:GetService("CoreGui")
@@ -268,6 +269,11 @@ local function RemovePlayerEsp(player)
     end
 end
 
+local function UpdatePlayerEsp(player)
+    RemovePlayerEsp(player)
+    CreatePlayerEsp(player)
+end
+
 for _, player in ipairs(Players:GetPlayers()) do
     if player ~= LocalPlayer then
         CreatePlayerEsp(player)
@@ -282,6 +288,9 @@ end)
 
 Players.PlayerRemoving:Connect(function(player)
     RemovePlayerEsp(player)
+    if CurrentTarget == player then
+        CurrentTarget = nil
+    end
 end)
 
 -- Fullbright
@@ -320,14 +329,18 @@ RunService.RenderStepped:Connect(function()
     Circle.Radius = FOV
 
     if IsActive then
-        local Target = GetClosestPlayerInFOV()
-        if Target then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, Target.Character.Head.Position)
-            TargetInfoLabel.Text = "Target: " .. Target.Name
+        if not CurrentTarget or not CurrentTarget.Character or not CurrentTarget.Character:FindFirstChild("HumanoidRootPart") or not CurrentTarget.Character:FindFirstChild("Humanoid") or CurrentTarget.Character.Humanoid.Health <= 0 then
+            CurrentTarget = GetClosestPlayerInFOV()
+        end
+        
+        if CurrentTarget then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, CurrentTarget.Character.Head.Position)
+            TargetInfoLabel.Text = "Target: " .. CurrentTarget.Name
         else
             TargetInfoLabel.Text = "Target: None"
         end
     else
+        CurrentTarget = nil
         TargetInfoLabel.Text = "Target: None"
     end
 end)
@@ -335,6 +348,9 @@ end)
 UserInputService.InputBegan:Connect(function(Input)
     if Input.KeyCode == AimbotKey then
         IsActive = not IsActive
+        if not IsActive then
+            CurrentTarget = nil
+        end
         local goal = {BackgroundColor3 = IsActive and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(50, 50, 50)}
         local tween = TweenService:Create(KeyInput, TweenInfo.new(0.3), goal)
         tween:Play()
@@ -415,6 +431,19 @@ local function AddDragging(frame, dragpart)
 end
 
 AddDragging(AimbotFrame, TitleBar)
+
+-- Update ESP when players respawn
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        UpdatePlayerEsp(player)
+    end)
+end)
+
+for _, player in ipairs(Players:GetPlayers()) do
+    player.CharacterAdded:Connect(function()
+        UpdatePlayerEsp(player)
+    end)
+end
 
 -- Return a function to clean up the script when it's unloaded
 return function()
